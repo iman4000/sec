@@ -39,7 +39,10 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
     unsigned short iphdrlen;
     struct sockaddr_in source,dest;
     struct ftuple entity;
+    unsigned int size;
     
+    size = header->len;
+
     eptr = (struct ether_header *)packet;
     //check ethernet header
     if(eptr->ether_type == ETHERTYPE_IP){
@@ -54,12 +57,16 @@ void process_packet(u_char *args, const struct pcap_pkthdr *header, const u_char
         iphdrlen = ip->ihl*4;
         if(ip->protocol == TCP){          //TCP
             tcp = (struct tcphdr *)(packet + iphdrlen + sizeof(struct ether_header));
+            int header_size = sizeof(struct ether_header) + iphdrlen + sizeof tcp;
+            unsigned long payload = size - header_size;
             entity.src_port = ntohs(tcp->source);     //SOURCE PORT
             entity.des_port = ntohs(tcp->dest);       //DEST PORT
             entity.protocol = TCP;
         }
         else if(ip->protocol == UDP){      //UDP
             udp = (struct udphdr *)(packet + iphdrlen + sizeof(struct ether_header));
+            int header_size = sizeof(struct ether_header) + iphdrlen + sizeof udp;
+            unsigned long payload = size - header_size;
             entity.src_port = ntohs(udp->source);     //SOURCE PORT
             entity.des_port = ntohs(udp->dest);       //DEST PORT
             entity.protocol = UDP;
